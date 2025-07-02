@@ -1,0 +1,75 @@
+cd Documents
+nano shopping.txt
+
+__shopping.txt__
+2022-09-06	02:15	Hubballi	shirt	187	visa
+2022-09-10	03:15	belagavi	jeans	900	cash
+
+nano mapper.py
+
+__mapper.py__
+#!/usr/bin/env python
+import string
+import fileinput
+for line in fileinput.input():
+        data = line.strip().split("\t")
+        if len (data)==6:
+           date,time,location,item,cost,payment=data
+           print "{0}\t{1}".format(location,cost)
+
+
+cat shopping.txt | python mapper.py 
+nano reducer.py
+
+__reducer.py__
+#!/usr/bin/env python
+import fileinput
+transactions_count = 0
+sales_total = 0
+for line in fileinput.input ():
+  data=line.strip().split("\t")
+  if len(data) != 2:
+      continue
+  current_key,current_value = data
+  transactions_count += 1
+  sales_total += float(current_value)
+print transactions_count,"\t",sales_total
+
+cat shopping.txt | python mapper.py | python reducer.py
+
+jps
+start-all.sh
+hdfs dfs -mkdir /tw2 
+
+[ If it goes into safe mode then type
+ hdfs dfsadmin –safemode leave
+ hdfs dfs –mkdir /tw2 ]
+
+hdfs dfs -ls /
+hdfs dfs –copyFromLocal /home/hduser/Documents/shopping.txt /tw2
+chmod 777 mapper.py reducer.py 
+ls -1
+
+hadoop jar /home/hduser/Downloads/hadoop-streaming-2.7.3.jar \  
+-input /tw2/shopping.txt \  
+-output /tw2/out \  
+-mapper /home/hduser/Documents/mapper.py \  
+-reducer /home/hduser/Documents/reducer.py
+
+hdfs dfs –cat /tw2/out/part-00000
+---------------------------------------------------------------------
+Now open firefox and type localhost:50070/
+Click utilities & click Browse the file system
+Click tw2
+Click out
+Click part-00000
+Click Download
+Click savefile
+Go to download and open the file part-00000 to view the 
+output
+
+
+
+
+
+

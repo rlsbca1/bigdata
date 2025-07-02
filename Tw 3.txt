@@ -1,0 +1,87 @@
+cd Documents
+nano age.csv
+
+__age.csv__
+1,1,21,5.4,50  
+2,2,22,5.0,52  
+3,1,23,4.5,55  
+4,1,22,6.0,65  
+5,2,21,4.9,50  
+6,2,20,4.5,48  
+7,1,19,5.2,55  
+8,2,20,4.8,50  
+9,1,23,6.1,75  
+10,2,24,5.5,55  
+
+nano mapper.py
+
+__mapper.py__
+#!/usr/bin/env python  
+import sys  
+for line in sys.stdin:  
+    line = line.strip()  
+    line = line.split(",")  
+    if len(line) >= 2:  
+        gender = line[1]  
+        age = line[2]  
+        print '%s\t%s' % (gender, age)  
+
+cat age.csv | python mapper.py 
+nano reducer.py
+
+__reducer.py__
+#!/usr/bin/env python  
+import sys  
+gender_age = {}  
+for line in sys.stdin:  
+    line = line.strip()  
+    gender, age = line.split('\t')  
+    if gender in gender_age:  
+        gender_age[gender].append(int(age))  
+    else:  
+        gender_age[gender] = []  
+        gender_age[gender].append(int(age))  
+for gender in gender_age.keys():  
+    ave_age = sum(gender_age[gender])*1.0 / len(gender_age[gender])  
+    print '%s\t%s' % (gender, ave_age)  
+
+
+cat age.csv | python mapper.py | python reducer.py
+
+jps
+start-all.sh
+hdfs dfs -mkdir /tw3 
+
+[ If it goes into safe mode then type
+ hdfs dfsadmin –safemode leave
+ hdfs dfs –mkdir /tw3 ]
+
+hdfs dfs -ls /
+hdfs dfs –copyFromLocal /home/hduser/Documents/age.csv /tw3
+chmod 777 mapper.py reducer.py 
+ls -1
+
+hadoop jar /home/hduser/Downloads/hadoop-streaming-2.7.3.jar \  
+-input /tw3/age.csv \  
+-output /tw3/out \  
+-mapper /home/hduser/Documents/mapper.py \  
+-reducer /home/hduser/Documents/reducer.py
+
+hdfs dfs –cat /tw3/out/part-00000
+---------------------------------------------------------------------
+Now open firefox and type localhost:50070/
+Click utilities & click Browse the file system
+Click tw3
+Click out
+Click part-00000
+Click Download
+Click savefile
+Go to download and open the file part-00000 to view the 
+output
+
+
+
+
+
+
+

@@ -1,0 +1,89 @@
+cd Documents
+nano opinion.csv
+
+__opinion.csv__
+1,M,25000,2,Agree
+2,F,50000,1,DisAgree
+3,M,75000,0,Neutral
+4,F,80000,2,Agree
+5,F,10000,1,DisAgree
+6,F,20000,3,Neutral
+7,M,17000,0,DisAgree
+8,F,15000,0,DisAgree
+9,M,60000,1,Agree
+10,F,45000,1,Agree
+11,F,46000,3,DisAgree
+12,F,50000,3,Neutral
+
+nano mapper.py
+
+__mapper.py__
+#!/usr/bin/env python  
+import sys
+for line in sys.stdin:
+    line = line.strip()
+    line = line.split(",")
+    if len(line) >= 2:
+	id = line[0]
+	opinion = line[4]
+     print '%s\t%s' % (id, opinion)  
+
+cat opinion.csv | python mapper.py 
+nano reducer.py
+
+__reducer.py__
+#!/usr/bin/env python
+import sys
+opiniondict = {}
+count=0
+for line in sys.stdin:
+    line = line.strip()
+    pid, opinion = line.split('\t')
+    if opinion in opiniondict:
+        opiniondict[opinion].append(count+1)
+    else:
+        opiniondict[opinion] = []
+        opiniondict[opinion].append(count+1)
+for opinion in opiniondict.keys():
+    count=len(opiniondict[opinion])
+    print '%s\t%s'%(opinion,count)
+
+cat opinion.csv | python mapper.py | python reducer.py
+
+jps
+start-all.sh
+hdfs dfs -mkdir /tw4 
+
+[ If it goes into safe mode then type
+ hdfs dfsadmin –safemode leave
+ hdfs dfs –mkdir /tw4 ]
+
+hdfs dfs -ls /
+hdfs dfs –copyFromLocal /home/hduser/Documents/opinion.csv /tw4
+chmod 777 mapper.py reducer.py 
+ls -1
+
+hadoop jar /home/hduser/Downloads/hadoop-streaming-2.7.3.jar \  
+-input /tw4/opinion.csv \  
+-output /tw4/out \  
+-mapper /home/hduser/Documents/mapper.py \  
+-reducer /home/hduser/Documents/reducer.py
+
+hdfs dfs –cat /tw4/out/part-00000
+---------------------------------------------------------------------
+Now open firefox and type localhost:50070/
+Click utilities & click Browse the file system
+Click tw4
+Click out
+Click part-00000
+Click Download
+Click savefile
+Go to download and open the file part-00000 to view the 
+output
+
+
+
+
+
+
+
